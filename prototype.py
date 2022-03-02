@@ -1,3 +1,4 @@
+from cProfile import label
 from scipy.optimize import minimize
 import numpy as np
 import matplotlib.pyplot as plt
@@ -46,10 +47,12 @@ if __name__ == '__main__':
     args = [xf]
 
     x0 = np.array([0,0])
-    step_size = 0.1
+    step_size = 0.5
     anchor_con_args = [x0,step_size]
-    centers = [np.array([5,5])]
-    r = 2.0
+    centers = [np.array([2.5,2.5]),
+                np.array([8,8]),
+                np.array([5,6])]
+    r = 1.0
     obst_con_args = [centers,r]
     con = (
         {'type':'eq',
@@ -61,32 +64,50 @@ if __name__ == '__main__':
     )
 
     path = np.array([x0[:]])
-    tau = 0.1
+    tau = 0.5
     while not endReached(X,xf,tau):
         x = minimize(obj,X,args=args,constraints=con)
         X = x.x.reshape((int(len(x.x)/2),2))
         path = np.vstack([path,X[0,:]])
+        
+        # fig, axs = plt.subplots()
+        # for i in range(len(centers)):
+        #     circle_i = plt.Circle(centers[i],radius=r,color='r',fill=True)
+        #     axs.add_patch(circle_i)
+        # axs.plot(path[:,0],path[:,1],'g+')
+        # axs.plot(X[:,0],X[:,1],'b--')
+        # axs.plot(0,0,'r*')
+        # print(xf)
+        # axs.plot(xf[0],xf[1],'r*')
+        # plt.show()
 
+        # Update variables (i.e. move along path)
         x0 = X[0,:]
-        step_size = 1.0
-        con_args = [x0,step_size]
+        step_size = 0.5
+        anchor_con_args = [x0,step_size]
         con = (
             {'type':'eq',
             'fun':anchor_con,
-            'args':con_args}
+            'args':anchor_con_args},
+            {'type':'ineq',
+            'fun':obst_con,
+            'args':obst_con_args},
         )
         X = np.vstack([X[1:,:],X[-1,:]+1])
-        print(X[-1,:])
-    print(X)
-    print(path)
     
     fig, axs = plt.subplots()
     for i in range(len(centers)):
-        circle_i = plt.Circle(centers[i],radius=r,color='r',fill=True)
+        if i == 0:
+            circle_i = plt.Circle(centers[i],radius=r,color='r',fill=True,label="Obstacle(s)")
+        else:
+            circle_i = plt.Circle(centers[i],radius=r,color='r',fill=True)
         axs.add_patch(circle_i)
-    axs.plot(path[:,0],path[:,1],'g+')
-    axs.plot(0,0,'r*')
-    print(xf)
-    axs.plot(xf[0],xf[1],'r*')
+    axs.plot(path[:,0],path[:,1],'g+',label="Path")
+    axs.plot(0,0,'r*',label="Starting Position")
+    axs.plot(xf[0],xf[1],'b*',label="Ending Position")
+    axs.set_title("Receding Horizon Path Planning")
+    axs.set_xlabel("X (m)")
+    axs.set_ylabel("Y (m)")
+    axs.legend()
     plt.show()
     
