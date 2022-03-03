@@ -49,19 +49,21 @@ if __name__ == '__main__':
     xf = np.array([10,10])
     x0 = np.array([0,0])
     step_size = 0.5
-    centers = [np.array([2.5,2.5]),
-                np.array([8,8]),
-                np.array([5,6])]
-    r = 1.0
+    centers = [np.array([4,3.5]),
+                np.array([8.5,8]),
+                np.array([6,7.5])]
+    r = 1.
     
     # Quadratic Penalty Method Variables
     n = np.size(X,0)
     m = 2 # 1 for equality and 1 for inequality constraints
     
     path = np.array([x0[:]])
-    tau = 0.5
-    step = 0
+    tau = step_size / 2
+    is1stIteration = True
     while np.linalg.norm(X[0,:] - xf) > tau:
+        if not is1stIteration:
+            X = np.vstack([X[1:,:],X[-1,:]+step_size])
         mu = np.ones((m,)) * 1 # mu > 0
         rho = np.ones((m,)) * 2 # Ext: rho > 1, Int: rho < 1
 
@@ -73,13 +75,23 @@ if __name__ == '__main__':
             x = minimize(obj_penalty,X,args=args)
             mu = rho * mu # mu gets larger each time
             X = x.x
+            itr += x.nit
 
         X = x.x.reshape(n,2)
         path = np.vstack([path,X[0,:]])
 
+        if is1stIteration:
+            true_optimum = step_size * np.array([
+                [np.sqrt(2)/2,np.sqrt(2)/2],
+                [2*np.sqrt(2)/2,2*np.sqrt(2)/2],
+                [3*np.sqrt(2)/2,3*np.sqrt(2)/2]
+            ])
+            print("Accuracy:",np.linalg.norm(X-true_optimum),"meters")
+            print("Number of iterations until convergence:",itr)
+            is1stIteration = False
+
         # Update variables (i.e. move along path)
         x0 = X[0,:]
-        X = np.vstack([X[1:,:],X[-1,:]+step_size])
     
     fig, axs = plt.subplots()
     for i in range(len(centers)):
