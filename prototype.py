@@ -1,4 +1,3 @@
-from cProfile import label
 from scipy.optimize import minimize
 import numpy as np
 import matplotlib.pyplot as plt
@@ -31,12 +30,6 @@ def obst_con(X,*args):
             constraint.append(np.linalg.norm(X[i,:]-c)-r)
     return np.array(constraint)
 
-def endReached(X,xf,tau):
-    for i in range(np.size(X,0)):
-        if np.linalg.norm(X[i,:] - xf) <= tau:
-            return True
-    return False
-
 if __name__ == '__main__':
     X = np.array([
         [1,1],
@@ -52,6 +45,10 @@ if __name__ == '__main__':
     centers = [np.array([2.5,2.5]),
                 np.array([8,8]),
                 np.array([5,6])]
+    # centers = [np.array([5,5]),
+    #             np.array([4,6]),
+    #             np.array([6,4])]
+
     r = 1.0
     obst_con_args = [centers,r]
     con = (
@@ -65,7 +62,7 @@ if __name__ == '__main__':
 
     path = np.array([x0[:]])
     tau = 0.5
-    while not endReached(X,xf,tau):
+    while np.linalg.norm(X[0,:] - xf) > tau:
         x = minimize(obj,X,args=args,constraints=con)
         X = x.x.reshape((int(len(x.x)/2),2))
         path = np.vstack([path,X[0,:]])
