@@ -42,12 +42,12 @@ if __name__ == '__main__':
     x0 = np.array([0,0])
     step_size = 0.5
     anchor_con_args = [x0,step_size]
-    centers = [np.array([2.5,2.5]),
-                np.array([8,8]),
-                np.array([5,6])]
-    # centers = [np.array([5,5]),
-    #             np.array([4,6]),
-    #             np.array([6,4])]
+    # centers = [np.array([2.5,2.5]),
+    #             np.array([8,8]),
+    #             np.array([5,6])]
+    centers = [np.array([4,3.5]),
+                np.array([8.5,8]),
+                np.array([6,7.5])]
 
     r = 1.0
     obst_con_args = [centers,r]
@@ -61,26 +61,28 @@ if __name__ == '__main__':
     )
 
     path = np.array([x0[:]])
-    tau = 0.5
+    tau = step_size / 2
+    is1stIteration = True
     while np.linalg.norm(X[0,:] - xf) > tau:
+        if not is1stIteration:
+            X = np.vstack([X[1:,:],X[-1,:]+step_size])
+
         x = minimize(obj,X,args=args,constraints=con)
         X = x.x.reshape((int(len(x.x)/2),2))
         path = np.vstack([path,X[0,:]])
-        
-        # fig, axs = plt.subplots()
-        # for i in range(len(centers)):
-        #     circle_i = plt.Circle(centers[i],radius=r,color='r',fill=True)
-        #     axs.add_patch(circle_i)
-        # axs.plot(path[:,0],path[:,1],'g+')
-        # axs.plot(X[:,0],X[:,1],'b--')
-        # axs.plot(0,0,'r*')
-        # print(xf)
-        # axs.plot(xf[0],xf[1],'r*')
-        # plt.show()
+
+        if is1stIteration:
+            true_optimum = step_size * np.array([
+                [np.sqrt(2)/2,np.sqrt(2)/2],
+                [2*np.sqrt(2)/2,2*np.sqrt(2)/2],
+                [3*np.sqrt(2)/2,3*np.sqrt(2)/2]
+            ])
+            print("Accuracy:",np.linalg.norm(X-true_optimum),"meters")
+            print("Number of iterations until convergence:",x.nit)
+            is1stIteration = False
 
         # Update variables (i.e. move along path)
         x0 = X[0,:]
-        step_size = 0.5
         anchor_con_args = [x0,step_size]
         con = (
             {'type':'eq',
@@ -90,7 +92,6 @@ if __name__ == '__main__':
             'fun':obst_con,
             'args':obst_con_args},
         )
-        X = np.vstack([X[1:,:],X[-1,:]+1])
     
     fig, axs = plt.subplots()
     for i in range(len(centers)):
@@ -102,7 +103,7 @@ if __name__ == '__main__':
     axs.plot(path[:,0],path[:,1],'g+',label="Path")
     axs.plot(0,0,'r*',label="Starting Position")
     axs.plot(xf[0],xf[1],'b*',label="Ending Position")
-    axs.set_title("Receding Horizon Path Planning")
+    axs.set_title("Receding Horizon Path Planning Using Scipy")
     axs.set_xlabel("X (m)")
     axs.set_ylabel("Y (m)")
     axs.legend()
