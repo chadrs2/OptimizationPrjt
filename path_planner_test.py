@@ -33,6 +33,32 @@ def obst_con(X,*args):
     return np.array(constraint)
 #################### END OPTIMIZATION FUNCTIONS #####################
 
+############## PLOT PLANNED PATH ####################
+def plotPath(planned_path, x_init, xf, obstacles, r):
+    fig = plt.figure(figsize = (10, 10))
+    ax = plt.axes(projection ="3d")
+    ax.view_init(elev=11., azim=-159.)
+    # Creating plot
+    ax.scatter3D(obstacles[:,0], obstacles[:,1], obstacles[:,2], color = "red") # plot centers
+    for obstacle in obstacles:
+        # draw sphere
+        u, v = np.mgrid[0:2*np.pi:50j, 0:np.pi:50j]
+        x = r*np.cos(u)*np.sin(v)
+        y = r*np.sin(u)*np.sin(v)
+        z = r*np.cos(v)
+        ax.plot_surface(x+obstacle[0], y+obstacle[1], z+obstacle[2], color='r', alpha=0.1)
+
+    ax.scatter3D(planned_path[:,0],planned_path[:,1],planned_path[:,2],color='blue', s=50, label="Path")
+    ax.scatter3D(x_init[0],x_init[1],x_init[2],color='green', s=50, label="Starting Position")
+    ax.scatter3D(xf[0],xf[1],xf[2],color='black', s=50, label="Ending Position")
+    ax.set_title("Receding Horizon Path Planning")
+    ax.set_xlabel("X (cm)")
+    ax.set_ylabel("Y (cm)")
+    ax.set_zlabel("Z (cm)")
+    ax.legend()
+    plt.show()
+#####################################################
+
 if __name__ == '__main__':
     # Load simulator 3D points data
     points_3d = np.load('first_run_3d_points.npy') # [num_imgs, data_pts, xyz]
@@ -40,11 +66,6 @@ if __name__ == '__main__':
     ndim = 3
 
     # Plan a path for 1st image
-    # X0 = np.array([
-    #     [1,1,1],
-    #     [2,2,2],
-    #     [3,3,3]
-    # ])
     X0 = np.linspace(0, ndim, num = ndim**2).reshape((ndim,ndim))
     xf = np.array([2000, 0, 400])
     args = [xf]
@@ -74,19 +95,7 @@ if __name__ == '__main__':
     path = np.vstack([path,X0[0,:]])
 
     # fig, axs = plt.subplots()
-    fig = plt.figure(figsize = (10, 7))
-    ax = plt.axes(projection ="3d")
-    # Creating plot
-    ax.scatter3D(centers[:,0], centers[:,1], centers[:,2], s=200, color = "red")
-    ax.plot3D(X0[:,0],X0[:,1],X0[:,2],'g+', linewidth=50, label="Path")
-    ax.plot3D(0,0,0,'g*', linewidth=50, label="Starting Position")
-    ax.plot3D(xf[0],xf[1],xf[2],'b*', linewidth=50, label="Ending Position")
-    ax.set_title("Receding Horizon Path Planning")
-    ax.set_xlabel("X (cm)")
-    ax.set_ylabel("Y (cm)")
-    ax.set_zlabel("Z (cm)")
-    ax.legend()
-    plt.show()
+    plotPath(X0, x_init, xf, centers, r)
 
     # # Update variables (i.e. move along path)
     # x_init = X0[0,:]
