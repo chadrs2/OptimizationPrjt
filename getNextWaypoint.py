@@ -34,10 +34,10 @@ def obst_con(X,*args):
 
 def getNextWaypoint(curr_pos_in_world, dest_pos_in_world, obstacles, horizon_size=3, step_size=0.1, radius=0.1):
     # ALL UNITS ARE METERS
-    ndim = curr_pos_in_world.shape
+    ndim = curr_pos_in_world.shape[0]
     
     # Init Parameters for optimization
-    X0 = np.linspace(curr_pos_in_world[0], ndim, num = ndim**2).reshape((ndim,ndim))
+    X0 = np.linspace(curr_pos_in_world[0], dest_pos_in_world[0], num = ndim*horizon_size).reshape((ndim,ndim))
     xf = dest_pos_in_world # m
     args = [xf]
     x_init = curr_pos_in_world
