@@ -10,7 +10,7 @@ from stereo_setup import cfg
 from get3DInfo import calc_3d
 from getNextWaypoint import getNextWaypoint
 # Final location: 
-goal_location = np.array([545.289, -657.793, -11.68])
+goal_location = np.array([545.289, -657.793, -15])
 
 # Key presses
 pressed_keys = list()
@@ -32,19 +32,40 @@ listener = keyboard.Listener(
 listener.start()
 
 
-#### GET PLOT READY
-# plt.ion()
-# fig1, (ax1, ax2) = plt.subplots(ncols=2,figsize=(8,5))
-# plt.grid(False)
-# plt.tight_layout()
-# fig1.canvas.draw()
-# fig1.canvas.flush_events()
-# PATH = "/home/chadrs2/Documents/holoocean_tests/"
+############## PLOT PLANNED PATH ####################
+def plotPath(planned_path, future_steps, x_init, xf, obstacles, r, plotSpheres=False):
+    fig = plt.figure(figsize = (10, 10))
+    ax = plt.axes(projection ="3d")
+    ax.view_init(elev=11., azim=-159.)
+    # Creating plot
+    ax.scatter3D(obstacles[:,0], obstacles[:,1], obstacles[:,2], color = "red") # plot centers
+    if plotSpheres:
+        # draw spheres
+        for obstacle in obstacles:
+            u, v = np.mgrid[0:2*np.pi:50j, 0:np.pi:50j]
+            x = r*np.cos(u)*np.sin(v)
+            y = r*np.sin(u)*np.sin(v)
+            z = r*np.cos(v)
+            ax.plot_surface(x+obstacle[0], y+obstacle[1], z+obstacle[2], color='r', alpha=0.1)
+
+    ax.scatter3D(planned_path[:,0],planned_path[:,1],planned_path[:,2],color='blue', s=50, label="Path")
+    ax.scatter3D(future_steps[:,0],future_steps[:,1],future_steps[:,2],color='green', s=50, label="Future Steps")
+    ax.scatter3D(x_init[0],x_init[1],x_init[2],color='green', s=50, label="Starting Position")
+    ax.scatter3D(xf[0],xf[1],xf[2],color='black', s=50, label="Ending Position")
+    ax.set_title("Receding Horizon Path Planning")
+    ax.set_xlabel("X (mm)")
+    ax.set_ylabel("Y (mm)")
+    ax.set_zlabel("Z (mm)")
+    ax.legend()
+    plt.show()
+#####################################################
+
 with holoocean.make(scenario_cfg=cfg) as env:
+    path = []
+    counter = 0
     while True:
         if 'q' in pressed_keys:
             break
-
         #send to holoocean
         state = env.tick()
         # print(state)
@@ -52,7 +73,11 @@ with holoocean.make(scenario_cfg=cfg) as env:
         curr_loc = state['MyLocation']
         # print("curr loc:", curr_loc)
         
-        if "LeftCamera" in state or "RightCamera" in state:
+        if "LeftCamera" in state and "RightCamera" in state:
+            
+            counter += 1
+            print(counter)
+            
             if "LeftCamera" in state:
                 left = state['LeftCamera']
                 left_img = cv2.cvtColor(left, cv2.COLOR_BGRA2RGB)
@@ -64,8 +89,15 @@ with holoocean.make(scenario_cfg=cfg) as env:
                 # ax2.imshow(right_img)
                 # plt.imsave(PATH+"stereo_imgs/right/right_img_"+str(state['t'])+"sec_x"+str(loc[0])+"_y"+str(loc[1])+"_z"+str(loc[2])+".png",right_img)
 
-            points_3d = calc_3d(left_img, right_img)
-            new_location = getNextWaypoint(curr_loc, goal_location, points_3d)
+            points_3d = calc_3d(left_img, right_img, curr_loc)
+            new_location, future_steps = getNextWaypoint(curr_loc, goal_location, points_3d, horizon_size=10, step_size=0.5)
+            path.append(new_location)
+
+            print("curr location:", curr_loc)
+            print("New location:", new_location)
+            if counter >= 9:
+                plotPath(np.array(path), future_steps, curr_loc, goal_location, points_3d, 2, plotSpheres=False)
+
             env.agents["auv0"].teleport(new_location)
 
             collided = env.tick()["CollisionSensor"][0]

@@ -37,7 +37,7 @@ def sorted_alphanumeric(data):
     alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
     return sorted(data, key=alphanum_key)
 
-def calc_3d(left_img, right_img, plotting=False):
+def calc_3d(left_img, right_img, location, plotting=False):
 
     gray_L = cv2.cvtColor(left_img,cv2.COLOR_BGR2GRAY)
     gray_R = cv2.cvtColor(right_img,cv2.COLOR_BGR2GRAY)
@@ -75,6 +75,7 @@ def calc_3d(left_img, right_img, plotting=False):
     robot_frame_points = robot_frame_points / 2 # scale factor to make it line up
     # print(left_3d[0:5, :])
     robot_frame_points = robot_frame_points / 100 # convert to meters
+    robot_frame_points += location
     if plotting == True:
         # Creating figure
         fig = plt.figure(figsize = (10, 7))
@@ -105,9 +106,9 @@ def calc_3d(left_img, right_img, plotting=False):
         ax.set_ylabel('Y-axis', fontweight ='bold')
         ax.set_zlabel('Z-axis', fontweight ='bold')
 
-        cv2.imshow("right", right_img)
-        cv2.waitKey(0)
         plt.show()
+    # cv2.imshow("right", right_img)
+    # cv2.waitKey(0)
 
 
     return robot_frame_points
