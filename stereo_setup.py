@@ -67,6 +67,9 @@ cfg = {
                     "sensor_type": "LocationSensor",
                     "sensor_name": "MyLocation",
                     "socket": "Origin"
+                },
+                {
+                    "sensor_type": "CollisionSensor",
                 }
             ],
             "control_scheme": 0,
