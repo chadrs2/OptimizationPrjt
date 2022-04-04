@@ -7,11 +7,11 @@ from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 
-from stereo_setup import cfg
+from hauv_avoidance_setup import cfg
 from get3DInfo import calc_3d
 from getNextWaypoint import getNextWaypoint
 # Final location: 
-goal_location = np.array([545.289, -657.793, -15])
+goal_location = np.array([537.0, -660.0, -15.0])
 
 # Key presses
 pressed_keys = list()
@@ -61,13 +61,21 @@ def plotPath(next_step, planned_path, future_steps, x_init, xf, obstacles, r, pl
     ax.legend()
     plt.show()
 #####################################################
-
+plt.ion()
+fig1, ax1 = plt.subplots(ncols=1,figsize=(8,5))
+plt.grid(False)
+plt.tight_layout()
+fig1.canvas.draw()
+fig1.canvas.flush_events()
+PATH = "/home/chadrs2/Documents/ME575/OptimizationPrjt/results/"
 
 with holoocean.make(scenario_cfg=cfg) as env:
     path = []
     object_cloud = []
     prev_location = None
+    object_locs = None
     counter = 0
+    step_size = 0.25
     while True:
         if 'q' in pressed_keys:
             break
@@ -76,55 +84,34 @@ with holoocean.make(scenario_cfg=cfg) as env:
         # print(state)
         # print(state['MyLocation']) # Goal: [546, -657, -12]
         if counter == 0:
-            curr_loc = state['MyLocation']
+            curr_loc = state['auv0']['MyLocation']
+            if object_locs is None:
+                for i in range(len(cfg["agents"])):
+                    print("Agent Obstacle",i,"added")
+                    if i == 1:
+                        object_locs = np.array([state['auv_avoid'+str(i)]['MyLocation']])
+                    elif i > 1:
+                        object_locs = np.append(object_locs, [state['auv_avoid'+str(i)]['MyLocation']], axis=0)
+                    print(object_locs)
             # env.agents["auv0"].teleport(curr_loc)
             # continue
         # print("curr loc:", curr_loc)
         
-        if "LeftCamera" in state and "RightCamera" in state:
-            
+        if "LeftCamera" in state['auv0'] and "RightCamera" in state['auv0']:
+            if "LeftCamera" in state['auv0']:
+                left = state['auv0']['LeftCamera']
+                left_img = cv2.cvtColor(left, cv2.COLOR_BGRA2RGB)
+                ax1.imshow(left_img)
+                plt.imsave(PATH+"agent_avoidance/left_img_"+str(state['t'])+".png",left_img)
+                fig1.canvas.draw()
+                fig1.canvas.flush_events()
             counter += 1
             print(counter)
             
-            if "LeftCamera" in state:
-                left = state['LeftCamera']
-                left_img = cv2.cvtColor(left, cv2.COLOR_BGRA2RGB)
-                # ax1.imshow(left_img)
-                # plt.imsave(PATH+"stereo_imgs/left/left_img_"+str(state['t'])+"sec_x"+str(loc[0])+"_y"+str(loc[1])+"_z"+str(loc[2])+".png",left_img)
-            if "RightCamera" in state:
-                right = state['RightCamera']
-                right_img = cv2.cvtColor(right, cv2.COLOR_BGRA2RGB)
-                # ax2.imshow(right_img)
-                # plt.imsave(PATH+"stereo_imgs/right/right_img_"+str(state['t'])+"sec_x"+str(loc[0])+"_y"+str(loc[1])+"_z"+str(loc[2])+".png",right_img)
-
-            points_3d = calc_3d(left_img, right_img, curr_loc)
-            points_3d = points_3d - np.array([0,0,0.2])
-            if counter == 1:
-                env.agents["auv0"].teleport(curr_loc)
-                continue
-            elif len(object_cloud) == 0:
-                object_cloud = points_3d
-            elif object_cloud.shape[0] >= 1500: # only keep most recent 1000 points
-                num_new_pts = points_3d.shape[0]
-                object_cloud = object_cloud[points_3d.shape[0]:,:]
-                # Shift 3D points based on new position
-                diff = curr_loc - prev_location
-                object_cloud = object_cloud + diff
-                object_cloud = np.append(object_cloud,points_3d,axis=0)
-            else:
-                # Shift 3D points based on new position
-                diff = curr_loc - prev_location
-                object_cloud = object_cloud + diff
-                object_cloud = np.append(object_cloud,points_3d,axis=0)
-
-            # points_3d = np.array([1e6, 1e6, 1e6])
-            # points_3d.reshape([1, points_3d.shape[0]])
-            # new_location, future_steps = getNextWaypoint(curr_loc, goal_location, object_cloud, horizon_size=50, step_size=0.125, radius=.35)
-            new_location, future_steps = getNextWaypoint(curr_loc, goal_location, points_3d, horizon_size=50, step_size=0.125, radius=.35)
+            new_location, future_steps = getNextWaypoint(curr_loc, goal_location, object_locs, horizon_size=10, step_size=step_size, radius=1.25)
             # plotPath(new_location, np.array(path), future_steps, curr_loc, goal_location, object_cloud, 2, plotSpheres=False)
             print("curr location:", curr_loc)
             print("New location:", new_location)
-            print("Object Cloud Dim:",object_cloud.shape)
             # if counter >= 9:
 
             env.agents["auv0"].teleport(new_location)
@@ -133,15 +120,15 @@ with holoocean.make(scenario_cfg=cfg) as env:
             prev_location = np.copy(curr_loc)
             curr_loc = new_location
 
-            collided = env.tick()["CollisionSensor"][0]
+            collided = env.tick()["auv0"]["CollisionSensor"][0]
             if collided:
                 print("### COLLISION! ###")
                 break
 
-            if (np.linalg.norm(goal_location - new_location)) < 0.5:
+            if (np.linalg.norm(goal_location - new_location)) < step_size:
                 print("Destination Reached!")
                 break
-    plotPath(new_location, np.array(path), future_steps, curr_loc, goal_location, points_3d, 2, plotSpheres=False)
+    plotPath(new_location, np.array(path), future_steps, curr_loc, goal_location, object_locs, 2, plotSpheres=False)
 
 
 

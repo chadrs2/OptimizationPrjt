@@ -62,4 +62,4 @@ def getNextWaypoint(curr_pos_in_world, dest_pos_in_world, obstacles, horizon_siz
     x = minimize(obj,X0,args=args,constraints=con, tol=1e-5)
     X0 = x.x.reshape((int(len(x.x)/ndim),ndim))
     
-    return X0[0], X0
+    return X0[0,:], X0[1:,:]
