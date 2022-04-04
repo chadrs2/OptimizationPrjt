@@ -32,12 +32,13 @@ def obst_con(X,*args):
     return np.array(constraint)
 #################### END OPTIMIZATION FUNCTIONS #####################
 
-def getNextWaypoint(curr_pos_in_world, dest_pos_in_world, obstacles, horizon_size=3, step_size=0.1, radius=0.1):
+def getNextWaypoint(curr_pos_in_world, dest_pos_in_world, obstacles, horizon_size=1, step_size=0.1, radius=0.1):
     # ALL UNITS ARE METERS
     ndim = curr_pos_in_world.shape[0]
     
     # Init Parameters for optimization
     X0 = np.linspace(curr_pos_in_world[0], dest_pos_in_world[0], num = ndim*horizon_size).reshape((horizon_size,ndim))
+    X0 = curr_pos_in_world
     xf = dest_pos_in_world # m
     args = [xf]
     x_init = curr_pos_in_world
@@ -52,12 +53,13 @@ def getNextWaypoint(curr_pos_in_world, dest_pos_in_world, obstacles, horizon_siz
         {'type':'ineq',
         'fun':anchor_con,
         'args':anchor_con_args},
+        # )#,
         {'type':'ineq',
         'fun':obst_con,
         'args':obst_con_args},
     )
 
-    x = minimize(obj,X0,args=args,constraints=con, tol=1e-2)
+    x = minimize(obj,X0,args=args,constraints=con, tol=1e-5)
     X0 = x.x.reshape((int(len(x.x)/ndim),ndim))
     
-    return X0[0,:], X0
+    return X0[0], X0
