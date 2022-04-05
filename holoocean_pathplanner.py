@@ -98,7 +98,7 @@ with holoocean.make(scenario_cfg=cfg) as env:
                 # plt.imsave(PATH+"stereo_imgs/right/right_img_"+str(state['t'])+"sec_x"+str(loc[0])+"_y"+str(loc[1])+"_z"+str(loc[2])+".png",right_img)
 
             points_3d = calc_3d(left_img, right_img, curr_loc)
-            points_3d = points_3d - np.array([0,0,0.2])
+            # points_3d = points_3d - np.array([0,0,0.2])
             if counter == 1:
                 env.agents["auv0"].teleport(curr_loc)
                 continue
