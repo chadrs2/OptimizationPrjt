@@ -57,8 +57,8 @@ def calc_3d(left_img, right_img, location, plotting=False):
         
         x2 = int(x2)
         y2 = int(y2)
-        cv2.line(right_img, (x1,y1), (x2,y2), (0,0,255), 2)
-        cv2.circle(right_img, (x2,y2), 2, (0,255,0),-1)
+        cv2.line(left_img, (x1,y1), (x2,y2), (0,0,255), 2)
+        cv2.circle(left_img, (x1,y1), 2, (0,255,0),-1)
     
     left_points = np.array(left_points)
 
@@ -111,7 +111,7 @@ def calc_3d(left_img, right_img, location, plotting=False):
     # cv2.waitKey(0)
 
 
-    return robot_frame_points
+    return robot_frame_points, left_img
 
 
 if __name__ == '__main__':
