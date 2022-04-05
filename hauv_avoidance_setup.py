@@ -70,6 +70,9 @@ cfg = {
                 },
                 {
                     "sensor_type": "CollisionSensor",
+                },
+                {
+                    "sensor_type": "ViewportCapture"
                 }
             ],
             "control_scheme": 0,
@@ -141,7 +144,7 @@ cfg = {
                 }
             ],
             "control_scheme": 0,
-            "location": [536.0, -660.0, -25.0],
+            "location": [536, -660.0, -25.5],
             "rotation": [0.0, 0.0, 0.0]
         }
     ],
