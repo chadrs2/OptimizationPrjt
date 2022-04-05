@@ -58,7 +58,7 @@ def calc_3d(left_img, right_img, location, plotting=False):
         x2 = int(x2)
         y2 = int(y2)
         # cv2.line(left_img, (x1,y1), (x2,y2), (0,0,255), 2)
-        cv2.circle(left_img, (x1,y1), 2, (0,255,0),-1)
+        cv2.circle(left_img, (x1,y1), 3, (255,0,0),-1)
     
     left_points = np.array(left_points)
 
