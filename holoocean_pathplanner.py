@@ -6,12 +6,12 @@ from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 
-from stereo_setup import cfg
+from stereo_setup_dam import cfg
 from get3DInfo import calc_3d
 from getNextWaypoint import getNextWaypoint
 # Final location: 
-goal_location = np.array([545.289, -657.793, -15])
-
+goal_location = np.array([545.289, -657.793, -7]) # Pier goal
+goal_location = np.array([-240, 43, -26]) # Dam goal
 # Key presses
 pressed_keys = list()
 
@@ -95,7 +95,7 @@ with holoocean.make(scenario_cfg=cfg) as env:
             points_3d = calc_3d(left_img, right_img, curr_loc)
             # points_3d = np.array([1e6, 1e6, 1e6])
             # points_3d.reshape([1, points_3d.shape[0]])
-            new_location, future_steps = getNextWaypoint(curr_loc, goal_location, points_3d, horizon_size=8, step_size=0.5, radius=0.75)
+            new_location, future_steps = getNextWaypoint(curr_loc, goal_location, points_3d, horizon_size=15, step_size=0.5, radius=5)
 
             print("curr location:", curr_loc)
             print("New location:", new_location)
@@ -114,6 +114,10 @@ with holoocean.make(scenario_cfg=cfg) as env:
             if (np.linalg.norm(goal_location - new_location)) < 0.5:
                 print("Destination Reached!")
                 break
+            pixels = state["LeftCamera"]
+            cv2.namedWindow("Camera Output")
+            cv2.imshow("Camera Output", pixels[:, :, 0:3])
+            cv2.waitKey(0)
     plotPath(new_location, np.array(path), future_steps, curr_loc, goal_location, points_3d, 2, plotSpheres=False)
 
 
