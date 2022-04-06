@@ -6,6 +6,7 @@ import cv2
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
+import scipy.stats as stats
 
 from hauv_avoidance_setup import cfg
 from get3DInfo import calc_3d
@@ -69,6 +70,13 @@ plt.tight_layout()
 # fig1.canvas.flush_events()
 PATH = "/home/chadrs2/Documents/ME575/OptimizationPrjt/results/"
 
+# noise calculations
+# auv_length = 0.5
+# std_dev_stereo_cam_positions = 
+# reliability = 0.9999
+# z = stats.norm.ppf(reliability) - (1 - stats.norm.ppf(reliability))
+# safety_radius = auv_length + std_dev_stereo_cam_positions * z
+
 with holoocean.make(scenario_cfg=cfg) as env:
     path = []
     object_cloud = []
@@ -106,43 +114,43 @@ with holoocean.make(scenario_cfg=cfg) as env:
             print(counter)
 
             #### USING TRUE POSITIONS ####
-            if "LeftCamera" in state['auv0']:
-                left = state['auv0']['LeftCamera']
-                left_img = cv2.cvtColor(left, cv2.COLOR_BGRA2RGB)
-                ax1.imshow(left_img)
-                # pixels = state['auv0']['ViewportCapture'][:, :, 0:3]
-                # pixels = cv2.cvtColor(pixels, cv2.COLOR_BGR2RGB)
-                # ax2.imshow(pixels)
-                # # fig1.canvas.draw()
-                # # fig1.canvas.flush_events()
-                # fig1.savefig(PATH+"agent_avoidance_knownLocations/two_views_"+str(state['t'])+".png")
-                # # plt.show()
-                # plt.close(fig1)
-                # plt.imsave(PATH+"agent_avoidance/left_img_"+str(state['t'])+".png",left_img)
-            new_location, future_steps = getNextWaypoint(curr_loc, goal_location, object_locs, horizon_size=10, step_size=step_size, radius=1.25)
-
-            #### USING 3D POINTS ####
             # if "LeftCamera" in state['auv0']:
             #     left = state['auv0']['LeftCamera']
             #     left_img = cv2.cvtColor(left, cv2.COLOR_BGRA2RGB)
-            #     # ax1.imshow(left_img)
-            #     # fig1.canvas.draw()
-            #     # fig1.canvas.flush_events()
-            #     # fig1.savefig(PATH+"agent_avoidance_unknownCamLocations/two_views_"+str(state['t'])+".png")
+            #     ax1.imshow(left_img)
+            #     # pixels = state['auv0']['ViewportCapture'][:, :, 0:3]
+            #     # pixels = cv2.cvtColor(pixels, cv2.COLOR_BGR2RGB)
+            #     # ax2.imshow(pixels)
+            #     # # fig1.canvas.draw()
+            #     # # fig1.canvas.flush_events()
+            #     # fig1.savefig(PATH+"agent_avoidance_knownLocations/two_views_"+str(state['t'])+".png")
             #     # # plt.show()
             #     # plt.close(fig1)
-            #     # plt.imsave(PATH+"agent_avoidance_unknownCamLocations/left_img_"+str(state['t'])+".png",left_img)
-            #     # plt.imsave(PATH+"agent_avoidance_unknownCamLocations/main_view_"+str(state['t'])+".png",pixels)
-            #     # out.write(left)
-            #     # cv2.imshow("Left Image", left)
-            #     # cv2.waitKey(5)
-            # if "RightCamera" in state['auv0']:
-            #     right = state['auv0']['RightCamera']
-            #     right_img = cv2.cvtColor(right, cv2.COLOR_BGRA2RGB)
-            #     # ax2.imshow(right_img)
-            #     # plt.imsave(PATH+"agent_avoidance/left_img_"+str(state['t'])+".png",right_img)
-            # points_3d, img_points = calc_3d(left_img, right_img, curr_loc)
-            # ax1.imshow(img_points)
+            #     # plt.imsave(PATH+"agent_avoidance/left_img_"+str(state['t'])+".png",left_img)
+            # new_location, future_steps = getNextWaypoint(curr_loc, goal_location, object_locs, horizon_size=10, step_size=step_size, radius=1.25)
+
+            #### USING 3D POINTS ####
+            if "LeftCamera" in state['auv0']:
+                left = state['auv0']['LeftCamera']
+                left_img = cv2.cvtColor(left, cv2.COLOR_BGRA2RGB)
+                # ax1.imshow(left_img)
+                # fig1.canvas.draw()
+                # fig1.canvas.flush_events()
+                # fig1.savefig(PATH+"agent_avoidance_unknownCamLocations/two_views_"+str(state['t'])+".png")
+                # # plt.show()
+                # plt.close(fig1)
+                # plt.imsave(PATH+"agent_avoidance_unknownCamLocations/left_img_"+str(state['t'])+".png",left_img)
+                # plt.imsave(PATH+"agent_avoidance_unknownCamLocations/main_view_"+str(state['t'])+".png",pixels)
+                # out.write(left)
+                # cv2.imshow("Left Image", left)
+                # cv2.waitKey(5)
+            if "RightCamera" in state['auv0']:
+                right = state['auv0']['RightCamera']
+                right_img = cv2.cvtColor(right, cv2.COLOR_BGRA2RGB)
+                # ax2.imshow(right_img)
+                # plt.imsave(PATH+"agent_avoidance/left_img_"+str(state['t'])+".png",right_img)
+            points_3d, img_points = calc_3d(left_img, right_img, curr_loc)
+            ax1.imshow(img_points)
             ax1.set_title("Main Agent's Left Camera")
             pixels = state['auv0']['ViewportCapture'][:, :, 0:3]
             pixels = cv2.cvtColor(pixels, cv2.COLOR_BGR2RGB)
@@ -152,27 +160,9 @@ with holoocean.make(scenario_cfg=cfg) as env:
             fig1.savefig(PATH+"agent_avoidance_knownLocations/two_views_"+str(state['t'])+".png")
             # plt.show()
             plt.close(fig1)
-            # # if counter == 1:
-            # #     env.agents["auv0"].teleport(curr_loc)
-            # #     continue
-            # # elif len(object_cloud) == 0:
-            # #     object_cloud = points_3d
-            # # elif object_cloud.shape[0] >= 1500: # only keep most recent 1000 points
-            # #     num_new_pts = points_3d.shape[0]
-            # #     object_cloud = object_cloud[points_3d.shape[0]:,:]
-            # #     # Shift 3D points based on new position
-            # #     diff = curr_loc - prev_location
-            # #     object_cloud = object_cloud + diff
-            # #     object_cloud = np.append(object_cloud,points_3d,axis=0)
-            # # else:
-            # #     # Shift 3D points based on new position
-            # #     diff = curr_loc - prev_location
-            # #     object_cloud = object_cloud + diff
-            # #     object_cloud = np.append(object_cloud,points_3d,axis=0)
-            # # new_location, future_steps = getNextWaypoint(curr_loc, goal_location, object_cloud, horizon_size=10, step_size=step_size, radius=1.25)
-            # new_location, future_steps = getNextWaypoint(curr_loc, goal_location, points_3d, horizon_size=10, step_size=step_size, radius=1.25)
+            new_location, future_steps = getNextWaypoint(curr_loc, goal_location, points_3d, horizon_size=10, step_size=step_size, radius=1.25)
 
-            # plotPath(new_location, np.array(path), future_steps, curr_loc, goal_location, object_cloud, 2, plotSpheres=False)
+            plotPath(new_location, np.array(path), future_steps, curr_loc, goal_location, points_3d, 2, plotSpheres=False)
             print("curr location:", curr_loc)
             print("New location:", new_location)
             # print("Cloud dims:",object_cloud.shape)
