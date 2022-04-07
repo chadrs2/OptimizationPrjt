@@ -59,8 +59,8 @@ cfg = {
                     "location": [0.0, -0.5, 0.0],
                     "Hz": 5,
                     "configuration": {
-                        "CaptureWidth": 512,
-                        "CaptureHeight": 512
+                        "CaptureWidth": 511,
+                        "CaptureHeight": 511
                     }
                 },
                 {

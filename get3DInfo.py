@@ -75,7 +75,22 @@ def calc_3d(left_img, right_img, location, plotting=False):
     robot_frame_points = robot_frame_points / 2 # scale factor to make it line up
     # print(left_3d[0:5, :])
     robot_frame_points = robot_frame_points / 100 # convert to meters
+    
+    norms = np.linalg.norm(robot_frame_points, axis=1)
+    small_error = np.where(norms <= 10)
+    med_error = np.where(np.logical_and(norms <= 20, norms > 10))
+    large_error = np.where(np.logical_and(norms < 40, norms > 20))
+    rejects = np. where(norms >= 40)
+
+    robot_frame_points[small_error] += np.random.normal(0, 10 * 0.01, 3)
+    robot_frame_points[med_error] += np.random.normal(0, 20 * 0.05, 3)
+    robot_frame_points[large_error] += np.random.normal(0, 40 * 0.09, 3)
+    robot_frame_points = np.delete(robot_frame_points, rejects, axis=0)
+
     robot_frame_points += location
+
+
+
     if plotting == True:
         # Creating figure
         fig = plt.figure(figsize = (10, 7))

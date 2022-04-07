@@ -71,8 +71,8 @@ plt.tight_layout()
 PATH = "/home/chadrs2/Documents/ME575/OptimizationPrjt/results/"
 
 # noise calculations
-# auv_length = 0.5
-# std_dev_stereo_cam_positions = 
+# auv_length = 1.1
+# std_dev_stereo_cam_positions = 0.1
 # reliability = 0.9999
 # z = stats.norm.ppf(reliability) - (1 - stats.norm.ppf(reliability))
 # safety_radius = auv_length + std_dev_stereo_cam_positions * z
@@ -157,7 +157,9 @@ with holoocean.make(scenario_cfg=cfg) as env:
             ax2.imshow(pixels)
             ax2.set_title("Main HAUV Agent")
             # fig1.savefig(PATH+"agent_avoidance_unknownCamLocations/two_views_"+str(state['t'])+".png")
-            fig1.savefig(PATH+"agent_avoidance_knownLocations/two_views_"+str(state['t'])+".png")
+
+            # fig1.savefig(PATH+"agent_avoidance_knownLocations/two_views_"+str(state['t'])+".png")
+
             # plt.show()
             plt.close(fig1)
             new_location, future_steps = getNextWaypoint(curr_loc, goal_location, points_3d, horizon_size=10, step_size=step_size, radius=1.25)
