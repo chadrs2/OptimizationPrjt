@@ -89,7 +89,7 @@ with holoocean.make(scenario_cfg=cfg) as env:
         # print("curr loc:", curr_loc)
         
         if "LeftCamera" in state and "RightCamera" in state:
-            # stuff
+            
             counter += 1
             print(counter)
             
