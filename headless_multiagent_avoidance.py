@@ -13,7 +13,7 @@ from get3DInfo import calc_3d
 from getNextWaypoint import getNextWaypoint
 from tqdm import tqdm
 
-max_runs = 3 # Change
+max_runs = 150 # Change
 
 # Final location: 
 goal_location = np.array([537.0, -660.0, -25.0])
@@ -76,9 +76,10 @@ plt.tight_layout()
 PATH = "/home/chadrs2/Documents/ME575/OptimizationPrjt/results/"
 
 # for num_runs in range(max_runs):
-for num_runs in tqdm(range(max_runs)):
 
-    with holoocean.make(scenario_cfg=cfg, show_viewport=False) as env:
+with holoocean.make(scenario_cfg=cfg, show_viewport=False) as env:
+    for num_runs in tqdm(range(max_runs)):
+        env.agents["auv0"].teleport([525.0, -660.0, -25.0])
         path = []
         object_cloud = []
         prev_location = None
@@ -182,7 +183,6 @@ for num_runs in tqdm(range(max_runs)):
                 if (np.linalg.norm(goal_location - new_location)) < step_size:
                     # print("Destination Reached!")
                     break
-        num_runs += 1
         # plotPath(new_location, np.array(path), future_steps, curr_loc, goal_location, object_locs, 2, plotSpheres=False)
         # out.release()
         # cv2.destroyAllWindows()
@@ -191,7 +191,7 @@ for num_runs in tqdm(range(max_runs)):
 
 print("Finished Simulation!")
 print("Num crashes:", num_crashes)
-print("Num Runs:", num_runs)
-print("Success Rate =", 1-num_crashes/num_runs)
+print("Num Runs:", max_runs)
+print("Success Rate =", 1-num_crashes/max_runs)
 # plt.ioff()
 # plt.show()
