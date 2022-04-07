@@ -59,8 +59,8 @@ cfg = {
                     "location": [0.0, -0.5, 0.0],
                     "Hz": 5,
                     "configuration": {
-                        "CaptureWidth": 511,
-                        "CaptureHeight": 511
+                        "CaptureWidth": 512,
+                        "CaptureHeight": 512
                     }
                 },
                 {
@@ -70,11 +70,14 @@ cfg = {
                 },
                 {
                     "sensor_type": "CollisionSensor",
+                },
+                {
+                    "sensor_type": "ViewportCapture"
                 }
             ],
             "control_scheme": 0,
-            "location": [525.0, -660.0, -15.0],
-            "rotation": [0.0, 0.0, 0.0]
+            "location": [545.289, -657.793, -7],
+            "rotation": [0.0, 0.0, 180.0]
         }
     ],
 

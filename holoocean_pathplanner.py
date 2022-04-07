@@ -7,12 +7,14 @@ from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 
-from stereo_setup_dam import cfg
+# from stereo_setup_dam import cfg
+from stereo_setup import cfg
 from get3DInfo import calc_3d
 from getNextWaypoint import getNextWaypoint
 # Final location: 
-goal_location = np.array([545.289, -657.793, -7]) # Pier goal
-goal_location = np.array([-240, 43, -26]) # Dam goal
+# goal_location = np.array([545.289, -657.793, -7]) # Pier goal
+goal_location = np.array([525.0, -660.0, -15.0]) # Reverse Pier Goal
+# goal_location = np.array([-240, 43, -26]) # Dam goal
 # Key presses
 pressed_keys = list()
 
@@ -61,7 +63,12 @@ def plotPath(next_step, planned_path, future_steps, x_init, xf, obstacles, r, pl
     ax.legend()
     plt.show()
 #####################################################
-
+fig1, (ax1,ax2) = plt.subplots(ncols=2,figsize=(8,5))
+plt.grid(False)
+plt.tight_layout()
+# fig1.canvas.draw()
+# fig1.canvas.flush_events()
+PATH = "/home/chadrs2/Documents/ME575/OptimizationPrjt/results/"
 
 with holoocean.make(scenario_cfg=cfg) as env:
     path = []
@@ -96,35 +103,45 @@ with holoocean.make(scenario_cfg=cfg) as env:
                 right_img = cv2.cvtColor(right, cv2.COLOR_BGRA2RGB)
                 # ax2.imshow(right_img)
                 # plt.imsave(PATH+"stereo_imgs/right/right_img_"+str(state['t'])+"sec_x"+str(loc[0])+"_y"+str(loc[1])+"_z"+str(loc[2])+".png",right_img)
+            points_3d, img_points = calc_3d(left_img, right_img, curr_loc)
+            ax1.imshow(img_points)
+            ax1.set_title("Main Agent's Left Camera")
+            pixels = state['ViewportCapture'][:, :, 0:3]
+            pixels = cv2.cvtColor(pixels, cv2.COLOR_BGR2RGB)
+            ax2.imshow(pixels)
+            ax2.set_title("Main HAUV Agent")
+            fig1.savefig(PATH+"pier_unknownCamLocations/two_views_"+str(state['t'])+".png")
+            # plt.show()
+            plt.close(fig1)
 
-            points_3d = calc_3d(left_img, right_img, curr_loc)
+            # points_3d, img_points = calc_3d(left_img, right_img, curr_loc)
             # points_3d = points_3d - np.array([0,0,0.2])
-            if counter == 1:
-                env.agents["auv0"].teleport(curr_loc)
-                continue
-            elif len(object_cloud) == 0:
-                object_cloud = points_3d
-            elif object_cloud.shape[0] >= 1500: # only keep most recent 1000 points
-                num_new_pts = points_3d.shape[0]
-                object_cloud = object_cloud[points_3d.shape[0]:,:]
-                # Shift 3D points based on new position
-                diff = curr_loc - prev_location
-                object_cloud = object_cloud + diff
-                object_cloud = np.append(object_cloud,points_3d,axis=0)
-            else:
-                # Shift 3D points based on new position
-                diff = curr_loc - prev_location
-                object_cloud = object_cloud + diff
-                object_cloud = np.append(object_cloud,points_3d,axis=0)
+            # if counter == 1:
+            #     env.agents["auv0"].teleport(curr_loc)
+            #     continue
+            # elif len(object_cloud) == 0:
+            #     object_cloud = points_3d
+            # elif object_cloud.shape[0] >= 1500: # only keep most recent 1000 points
+            #     num_new_pts = points_3d.shape[0]
+            #     object_cloud = object_cloud[points_3d.shape[0]:,:]
+            #     # Shift 3D points based on new position
+            #     diff = curr_loc - prev_location
+            #     object_cloud = object_cloud + diff
+            #     object_cloud = np.append(object_cloud,points_3d,axis=0)
+            # else:
+            #     # Shift 3D points based on new position
+            #     diff = curr_loc - prev_location
+            #     object_cloud = object_cloud + diff
+            #     object_cloud = np.append(object_cloud,points_3d,axis=0)
 
             # points_3d = np.array([1e6, 1e6, 1e6])
             # points_3d.reshape([1, points_3d.shape[0]])
             # new_location, future_steps = getNextWaypoint(curr_loc, goal_location, object_cloud, horizon_size=50, step_size=0.125, radius=.35)
-            new_location, future_steps = getNextWaypoint(curr_loc, goal_location, points_3d, horizon_size=50, step_size=0.125, radius=.35)
-            # plotPath(new_location, np.array(path), future_steps, curr_loc, goal_location, object_cloud, 2, plotSpheres=False)
+            new_location, future_steps = getNextWaypoint(curr_loc, goal_location, points_3d, horizon_size=10, step_size=0.125, radius=.35)
+            # plotPath(new_location, np.array(path), future_steps, curr_loc, goal_location, points_3d, 2, plotSpheres=False)
             print("curr location:", curr_loc)
             print("New location:", new_location)
-            print("Object Cloud Dim:",object_cloud.shape)
+            # print("Object Cloud Dim:",object_cloud.shape)
             # if counter >= 9:
 
             env.agents["auv0"].teleport(new_location)
@@ -141,10 +158,10 @@ with holoocean.make(scenario_cfg=cfg) as env:
             if (np.linalg.norm(goal_location - new_location)) < 0.5:
                 print("Destination Reached!")
                 break
-            pixels = state["LeftCamera"]
-            cv2.namedWindow("Camera Output")
-            cv2.imshow("Camera Output", pixels[:, :, 0:3])
-            cv2.waitKey(0)
+            # pixels = state["LeftCamera"]
+            # cv2.namedWindow("Camera Output")
+            # cv2.imshow("Camera Output", pixels[:, :, 0:3])
+            # cv2.waitKey(0)
     plotPath(new_location, np.array(path), future_steps, curr_loc, goal_location, points_3d, 2, plotSpheres=False)
 
 
